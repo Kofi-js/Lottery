@@ -36,7 +36,7 @@ contract HelperConfig is Script, CodeConstants {
     }
 
     function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
-        if (networkConfigs[chainId].vrfCoordinator == address(0)) {
+        if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return networkConfigs[chainId];
         } else if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilEthConfig();
