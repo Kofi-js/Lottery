@@ -20,6 +20,9 @@ contract RaffleTest is Test {
     address public PLAYER = makeAddr("player");
     uint256 public constant STARTING_BALANCE = 100 ether;
 
+    event RaffleEntered(address indexed player);
+    event WinnerPicked(address indexed winner);
+
     function setUp() external {
         DeployRaffle deployer = new DeployRaffle();
         (raffle, helperConfig) = deployer.deployRaffleContract();
@@ -60,5 +63,29 @@ contract RaffleTest is Test {
         // Assert
         address newPlayer = raffle.getPlayer(0);
         assert(newPlayer == PLAYER);
+    }
+
+    function testEnteringRaffleEmitsEvent() public {
+        //Arrange
+        vm.prank(PLAYER);
+        // Act
+        vm.expectEmit(true, false, false, false, address(raffle));
+        emit RaffleEntered(PLAYER);
+        //assert
+        raffle.enterRaffle{value: ENTRY_FEE}();
+
+    }
+
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
+        // Arrange
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: ENTRY_FEE}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep("");
+        // Act/Assert
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector);
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: ENTRY_FEE}();
     }
 }
